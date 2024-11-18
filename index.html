@@ -32,7 +32,7 @@
         <a-entity id="modelEntity" 
                   gltf-model="https://raw.githubusercontent.com/ei-pc10/hitomania_3d/main/model.glb" 
                   position="0 -3 -3" 
-                  scale="6 6 6"
+                  scale="5 5 5"
                   look-at="[camera]"
                   visible="false"
                   animation-mixer>
@@ -51,7 +51,7 @@
         
         // Android判定
         const isAndroid = /Android/i.test(navigator.userAgent);
-        const scale = isAndroid ?  4.5: 6;  // Androidの場合はスケールを0.4に設定
+        const scale = isAndroid ?  4.5: 5;  // Androidの場合はスケールを0.4に設定
 
         if (isAndroid) {
             alert("Your device is Android.");    
