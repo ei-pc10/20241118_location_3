@@ -9,8 +9,24 @@
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <script type='text/javascript' src='https://raw.githack.com/AR-js-org/AR.js/master/three.js/build/ar-threex-location-only.js'></script>
     <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
+    <style>
+        #locationDisplay {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            z-index: 1000;
+        }
+    </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
+    <!-- 緯度と経度の表示エリア -->
+    <div id="locationDisplay">位置情報を取得中...</div>
+
     <a-scene vr-mode-ui="enabled: false" embedded arjs="sourceType: webcam; debugUIEnabled: false;">
         <!-- 3Dモデルのエンティティ（初期状態では非表示） -->
         <a-entity id="modelEntity" 
@@ -27,20 +43,26 @@
     </a-scene>
 
     <script>
-        const targetLatitude = 37.95623964531757; 
+        // 特定の表示位置（緯度と経度）
+        const targetLatitude = 37.95623964531757; //短大僕の机の緯度経度
         const targetLongitude = 139.3371717973987;
         const modelEntity = document.getElementById('modelEntity');
-        const isAndroid = /Android/i.test(navigator.userAgent);
-        const scale = isAndroid ? 0.4 : 0.3;
+        const locationDisplay = document.getElementById('locationDisplay');
         
+        // Android判定
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const scale = isAndroid ? 0.4 : 0.3;  // Androidの場合はスケールを0.4に設定
+
         if (isAndroid) {
             alert("Your device is Android.");    
         } else {
             alert("Your device is IOS or and so on.");
         }
 
+        // スケールを適用
         modelEntity.object3D.scale.set(scale, scale, scale);
 
+        // 距離計算用の関数
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371000; // 地球の半径（メートル）
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -52,36 +74,37 @@
             return R * c;
         }
 
+        // 位置情報を取得し、画面に現在地を表示
         if ("geolocation" in navigator) {
-            navigator.geolocation.watchPosition(
-                function (position) {
-                    console.log("位置情報の取得に成功しました。");
-                    
-                    const userLatitude = position.coords.latitude;
-                    const userLongitude = position.coords.longitude;
-                    
-                    console.log(`ユーザーの現在地: 緯度=${userLatitude}, 経度=${userLongitude}`);
-                    
-                    const distance = calculateDistance(userLatitude, userLongitude, targetLatitude, targetLongitude);
-                    
-                    console.log(`目標との距離: ${distance}m`);
-                    
-                    if (distance <= 100) {
-                        modelEntity.setAttribute('gps-entity-place', `latitude: ${targetLatitude}; longitude: ${targetLongitude};`);
-                        modelEntity.setAttribute('visible', 'true');
-                        console.log("指定位置に近いため、モデルを表示します。");
-                    } else {
-                        console.log("指定位置から離れているため、モデルは表示されません。");
-                    }
-                },
-                function (error) {
-                    console.log("位置情報の取得に失敗しました:", error);
-                },
-                { enableHighAccuracy: true, maximumAge: 3000, timeout: 5000 }
-            );
+            navigator.geolocation.watchPosition(function(position) {
+                const userLatitude = position.coords.latitude;
+                const userLongitude = position.coords.longitude;
+
+                // ユーザーの現在地を表示エリアに更新
+                locationDisplay.innerHTML = `
+                    <strong>現在地</strong><br>
+                    緯度: ${userLatitude.toFixed(6)}<br>
+                    経度: ${userLongitude.toFixed(6)}
+                `;
+
+                // 指定の位置との距離を計算
+                const distance = calculateDistance(userLatitude, userLongitude, targetLatitude, targetLongitude);
+
+                // 70メートル以内にいる場合にモデルを表示
+                if (distance <= 70) {
+                    modelEntity.setAttribute('gps-entity-place', `latitude: ${targetLatitude}; longitude: ${targetLongitude};`);
+                    modelEntity.setAttribute('visible', 'true');
+                    console.log("指定位置に近いため、モデルを表示します。");
+                } else {
+                    console.log("指定位置から離れているため、モデルは表示されません。");
+                }
+            }, function(error) {
+                console.error("位置情報の取得に失敗しました:", error);
+                locationDisplay.innerHTML = "位置情報の取得に失敗しました";
+            }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 5000 });
         } else {
-            console.log("このブラウザでは位置情報がサポートされていません");
-            alert("このブラウザでは位置情報がサポートされていません");
+            console.error("このブラウザでは位置情報がサポートされていません");
+            locationDisplay.innerHTML = "位置情報がサポートされていません";
         }
     </script>
 </body>
