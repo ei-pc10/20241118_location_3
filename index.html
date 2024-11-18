@@ -92,7 +92,7 @@
                 `;
 
                 // 70メートル以内にいる場合にモデルを表示
-                if (distance <= 70) {
+                if (distance <= 100) {
                     modelEntity.setAttribute('gps-entity-place', `latitude: ${targetLatitude}; longitude: ${targetLongitude};`);
                     modelEntity.setAttribute('visible', 'true');
                     console.log("指定位置に近いため、モデルを表示します。");
